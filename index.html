@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI提示词生成器 - 免费一键生成</title>
+    <!-- 引入Tailwind CSS（CDN方式，无需本地安装） -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome图标（用于复制、清空按钮） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 自定义Tailwind配置（可选，统一风格） -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', // 主色调-蓝色
+                        secondary: '#64748b', // 辅助色-浅灰蓝
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none;
+            }
+            .btn-hover {
+                @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+    <!-- 页面头部 -->
+    <header class="bg-white shadow-sm py-4 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-slate-800 flex items-center justify-center gap-2">
+                <i class="fas fa-magic text-primary"></i>
+                AI提示词生成器
+            </h1>
+            <p class="text-secondary mt-2">输入你的需求，一键生成专业、高适配的AI提示词</p>
+        </div>
+    </header>
+
+    <!-- 核心内容区 -->
+    <main class="flex-grow py-8 px-6">
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6 md:p-8">
+            <!-- 输入区域 -->
+            <div class="mb-8">
+                <label for="user-need" class="block text-slate-700 font-medium mb-2">
+                    请输入你的需求 <span class="text-red-500">*</span>
+                </label>
+                <textarea 
+                    id="user-need" 
+                    class="w-full h-32 md:h-40 p-4 border border-slate-300 rounded-lg input-focus resize-y"
+                    placeholder="例如：生成一张赛博朋克风格的城市夜景图、写一篇关于春天的散文、设计一个电商产品详情页文案..."
+                ></textarea>
+                <p class="text-xs text-secondary mt-2">提示：需求描述越详细，生成的提示词质量越高</p>
+            </div>
+
+            <!-- 操作按钮区 -->
+            <div class="flex gap-4 mb-8 flex-wrap">
+                <button id="generate-btn" class="bg-primary text-white px-6 py-3 rounded-lg font-medium btn-hover flex items-center gap-2">
+                    <i class="fas fa-generator"></i> 生成提示词
+                </button>
+                <button id="clear-btn" class="bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-medium btn-hover flex items-center gap-2">
+                    <i class="fas fa-trash"></i> 清空内容
+                </button>
+            </div>
+
+            <!-- 结果展示区域 -->
+            <div class="border-t border-slate-200 pt-8">
+                <h3 class="text-slate-700 font-medium mb-3 flex items-center gap-2">
+                    <i class="fas fa-file-alt text-primary"></i> 生成结果
+                </h3>
+                <div class="relative">
+                    <textarea 
+                        id="result-area" 
+                        class="w-full h-40 md:h-48 p-4 border border-slate-300 rounded-lg bg-slate-50 readonly:cursor-default"
+                        readonly
+                        placeholder="生成的提示词将显示在这里，点击右侧按钮可一键复制..."
+                    ></textarea>
+                    <!-- 复制按钮 -->
+                    <button 
+                        id="copy-btn" 
+                        class="absolute top-3 right-3 bg-primary/90 text-white p-2 rounded-lg btn-hover"
+                        title="复制到剪贴板"
+                    >
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <!-- 复制成功提示（默认隐藏） -->
+                <p id="copy-tip" class="text-green-500 text-sm mt-2 hidden flex items-center gap-1">
+                    <i class="fas fa-check"></i> 复制成功！已保存到剪贴板
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页面底部 -->
+    <footer class="bg-slate-800 text-white py-4 px-6 text-center text-sm">
+        <p>免费AI提示词生成器 | 纯前端无广告 · 无数据收集</p>
+        <p class="mt-1 text-slate-400">© 2026 所有权利保留</p>
+    </footer>
+
+    <!-- JavaScript 核心逻辑 -->
+    <script>
+        // 获取页面元素
+        const userNeed = document.getElementById('user-need');
+        const generateBtn = document.getElementById('generate-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const resultArea = document.getElementById('result-area');
+        const copyBtn = document.getElementById('copy-btn');
+        const copyTip = document.getElementById('copy-tip');
+
+        // 核心：提示词生成函数（可根据需求无限扩展规则）
+        function generatePrompt(need) {
+            // 基础提示词模板（适配ChatGPT、文心一言、通义千问、Stable Diffusion等通用AI）
+            // 可根据不同AI模型修改/扩展模板，比如单独做绘画/文案/编程专属模板
+            const baseTemplate = `
+请严格按照以下需求生成相关内容：${need}
+要求：
+1. 内容贴合需求核心，逻辑清晰、细节丰富
+2. 语言表达流畅自然，符合日常使用习惯
+3. 若为创作类需求，保证原创性和画面感/文字感染力
+4. 若为工具类需求，保证步骤明确、可操作性强
+5. 整体内容简洁明了，无冗余信息，适配AI理解逻辑
+            `;
+            // 去除多余空格和换行，返回整洁结果
+            return baseTemplate.replace(/\s+/g, ' ').trim();
+        }
+
+        // 生成按钮点击事件
+        generateBtn.addEventListener('click', () => {
+            const needText = userNeed.value.trim();
+            // 验证输入非空
+            if (!needText) {
+                alert('请输入你的需求后再生成提示词！');
+                userNeed.focus();
+                return;
+            }
+            // 生成提示词并赋值到结果区
+            const promptText = generatePrompt(needText);
+            resultArea.value = promptText;
+            // 滚动到结果区（方便手机端查看）
+            resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        // 清空按钮点击事件
+        clearBtn.addEventListener('click', () => {
+            userNeed.value = '';
+            resultArea.value = '';
+            copyTip.classList.add('hidden');
+            userNeed.focus();
+        });
+
+        // 复制按钮点击事件
+        copyBtn.addEventListener('click', async () => {
+            const resultText = resultArea.value.trim();
+            if (!resultText) {
+                alert('暂无生成结果，无法复制！');
+                return;
+            }
+            // 调用浏览器剪贴板API复制内容
+            try {
+                await navigator.clipboard.writeText(resultText);
+                copyTip.classList.remove('hidden');
+                // 3秒后隐藏复制成功提示
+                setTimeout(() => {
+                    copyTip.classList.add('hidden');
+                }, 3000);
+            } catch (err) {
+                alert('复制失败，请手动复制！');
+                console.error('复制错误：', err);
+            }
+        });
+
+        // 回车触发生成（可选，提升体验）
+        userNeed.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                generateBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
