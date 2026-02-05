@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI提示词生成器 - 智能优化版</title>
+    <title>AI提示词智能生成器 - 极速版</title>
     <!-- 引入Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Tailwind配置：深色模式+自定义样式 -->
+    <!-- Tailwind配置 -->
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        primary: '#2563eb', // 主色：深蓝（更专业）
+                        primary: '#2563eb',
                         secondary: '#475569',
                         success: '#10b981',
                         warning: '#f59e0b',
@@ -25,17 +25,12 @@
                         sans: ['Inter', 'system-ui', 'sans-serif'],
                     },
                     keyframes: {
-                        pulse: {
-                            '0%, 100%': { opacity: 1 },
-                            '50%': { opacity: 0.5 },
-                        },
                         spin: {
                             '0%': { transform: 'rotate(0deg)' },
                             '100%': { transform: 'rotate(360deg)' },
                         }
                     },
                     animation: {
-                        pulse: 'pulse 1.5s ease-in-out infinite',
                         spin: 'spin 1s linear infinite',
                     }
                 }
@@ -46,24 +41,19 @@
         @layer utilities {
             .content-auto { content-visibility: auto; }
             .input-focus { @apply focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none; }
-            .btn-hover { @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300; }
+            .btn-hover { @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200; }
             .card-hover { @apply hover:shadow-md hover:border-primary/30 transition-all duration-200; }
-            .loading-shimmer { @apply bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent bg-[length:200%_100%] animate-shimmer; }
-            @keyframes shimmer {
-                0% { background-position: 200% 0; }
-                100% { background-position: -200% 0; }
-            }
         }
         /* 全局样式 */
         html { transition: background-color 0.3s ease, color 0.3s ease; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { @apply bg-slate-400 rounded-full dark:bg-slate-600; }
         ::-webkit-scrollbar-track { @apply bg-slate-100 dark:bg-slate-800; }
-        /* 加载弹窗遮罩 */
+        /* 加载弹窗：仅异步时显示 */
         .loading-overlay {
-            @apply fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm;
+            @apply fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm hidden;
         }
-        /* 评分星级样式 */
+        /* 评分样式 */
         .star-active { @apply text-warning; }
         .star-inactive { @apply text-slate-300 dark:text-slate-700; }
     </style>
@@ -74,14 +64,14 @@
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold flex items-center gap-2">
                 <i class="fas fa-robot text-primary"></i>
-                AI提示词智能生成器
+                AI提示词极速生成器
             </h1>
             <div class="flex items-center gap-4">
-                <!-- 模型模式切换：本地/真实API -->
+                <!-- 模型模式切换 -->
                 <div class="flex items-center gap-2 text-sm">
-                    <span class="text-secondary dark:text-slate-400 hidden sm:inline">模型模式：</span>
+                    <span class="text-secondary dark:text-slate-400 hidden sm:inline">模型：</span>
                     <select id="model-mode" class="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm input-focus">
-                        <option value="local">本地智能优化（免费）</option>
+                        <option value="local">本地极速优化（毫秒级）</option>
                         <option value="api">真实AI模型（需API）</option>
                     </select>
                 </div>
@@ -100,20 +90,20 @@
             <!-- 1. AI模型配置区 -->
             <div class="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                 <h3 class="text-slate-700 dark:text-slate-200 font-medium mb-3 flex items-center gap-2">
-                    <i class="fas fa-cogs text-primary"></i> AI模型配置
+                    <i class="fas fa-cogs text-primary"></i> 模型配置
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- AI模型选择 -->
+                    <!-- AI模型类型 -->
                     <div>
                         <label class="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">AI模型类型</label>
                         <select id="ai-model-type" class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg input-focus bg-white dark:bg-slate-600 dark:text-slate-100">
-                            <option value="general">通用大模型（ChatGPT/文心一言）</option>
-                            <option value="painting">绘画模型（MJ/SD/文心一格）</option>
+                            <option value="general">通用大模型</option>
+                            <option value="painting">绘画模型（MJ/SD）</option>
                             <option value="writing">文案模型（小红书/公众号）</option>
-                            <option value="coding">编程模型（Copilot/CodeLlama）</option>
+                            <option value="coding">编程模型（Copilot）</option>
                         </select>
                     </div>
-                    <!-- 提示词参数 -->
+                    <!-- 核心参数 -->
                     <div>
                         <label class="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2">核心参数</label>
                         <div class="grid grid-cols-2 gap-2">
@@ -128,14 +118,13 @@
                         </div>
                     </div>
                 </div>
-                <!-- API配置区（默认隐藏，切换到真实API时显示） -->
+                <!-- API配置区（仅API模式显示） -->
                 <div id="api-config" class="mt-4 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50 hidden">
-                    <label class="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">API配置（以通义千问为例）</label>
+                    <label class="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">API配置（通义千问示例）</label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <input type="text" id="api-key" placeholder="输入你的API Key" class="p-2 border rounded-lg input-focus text-sm">
-                        <input type="text" id="api-url" placeholder="API接口地址" value="https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation" class="p-2 border rounded-lg input-focus text-sm">
+                        <input type="text" id="api-url" placeholder="API地址" value="https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation" class="p-2 border rounded-lg input-focus text-sm">
                     </div>
-                    <p class="text-xs text-secondary dark:text-slate-400 mt-2">📌 免费API可申请：通义千问、DeepSeek、豆包等</p>
                 </div>
             </div>
 
@@ -147,26 +136,26 @@
                 <textarea 
                     id="user-need" 
                     class="w-full h-32 md:h-40 p-4 border border-slate-300 dark:border-slate-600 rounded-lg input-focus resize-y bg-white dark:bg-slate-600 dark:text-slate-100 dark:placeholder-slate-400"
-                    placeholder="例：生成一张赛博朋克风格的城市夜景图，要有霓虹灯光、雨天氛围、未来感建筑；或写一篇关于马年春节的朋友圈文案..."
+                    placeholder="例：生成赛博朋克城市夜景，雨天霓虹、未来建筑；或写马年春节朋友圈文案..."
                 ></textarea>
-                <p class="text-xs text-secondary dark:text-slate-400 mt-2">💡 需求越具体，AI模型优化效果越好！</p>
+                <p class="text-xs text-secondary dark:text-slate-400 mt-2">💡 需求越具体，提示词越精准！本地模型毫秒级响应，无需等待</p>
             </div>
 
             <!-- 3. 操作按钮区 -->
             <div class="flex gap-4 mb-8 flex-wrap">
                 <button id="generate-btn" class="bg-primary text-white px-6 py-3 rounded-lg font-medium btn-hover flex items-center gap-2">
-                    <i class="fas fa-rocket"></i> 启动AI模型生成
+                    <i class="fas fa-magic"></i> 一键生成提示词
                 </button>
                 <button id="clear-btn" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-6 py-3 rounded-lg font-medium btn-hover flex items-center gap-2">
                     <i class="fas fa-trash"></i> 清空内容
                 </button>
             </div>
 
-            <!-- 4. 结果展示区（含优化后提示词+评分+建议） -->
+            <!-- 4. 结果展示区 -->
             <div class="border-t border-slate-200 dark:border-slate-700 pt-8 mb-8">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-slate-700 dark:text-slate-200 font-medium flex items-center gap-2 text-lg">
-                        <i class="fas fa-check-circle text-success"></i> AI模型输出
+                        <i class="fas fa-check-circle text-success"></i> 优化结果
                     </h3>
                     <span id="result-score" class="hidden items-center gap-1 text-lg font-bold">
                         <span>评分：</span>
@@ -175,9 +164,9 @@
                     </span>
                 </div>
 
-                <!-- 原提示词 -->
+                <!-- 原始需求 -->
                 <div class="mb-4">
-                    <h4 class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">原始需求</h4>
+                    <h4 class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">原始需求</h>
                     <div id="original-prompt" class="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg text-sm text-slate-700 dark:text-slate-300"></div>
                 </div>
 
@@ -191,12 +180,12 @@
                             id="result-area" 
                             class="w-full h-40 md:h-48 p-4 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 readonly:cursor-default dark:text-slate-100 dark:placeholder-slate-400"
                             readonly
-                            placeholder="AI模型处理后，优化后的提示词将显示在这里..."
+                            placeholder="点击「一键生成」，毫秒级输出优化后提示词..."
                         ></textarea>
                         <button 
                             id="copy-btn" 
                             class="absolute top-3 right-3 bg-primary/90 text-white p-2 rounded-lg btn-hover"
-                            title="复制优化后提示词"
+                            title="复制提示词"
                         >
                             <i class="fas fa-copy"></i>
                         </button>
@@ -206,14 +195,14 @@
                 <!-- 优化建议 -->
                 <div id="suggestion-card" class="p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-700/30 hidden">
                     <h4 class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-2">
-                        <i class="fas fa-lightbulb text-warning"></i> AI模型优化建议
+                        <i class="fas fa-lightbulb text-warning"></i> 优化建议
                     </h4>
                     <div id="suggestion-content" class="text-sm text-slate-700 dark:text-slate-300 space-y-2"></div>
                 </div>
 
                 <!-- 复制提示 -->
                 <p id="copy-tip" class="text-success dark:text-green-400 text-sm mt-3 hidden flex items-center gap-1">
-                    <i class="fas fa-check"></i> 复制成功！已保存到剪贴板
+                    <i class="fas fa-check"></i> 复制成功！
                 </p>
             </div>
 
@@ -221,7 +210,7 @@
             <div class="border-t border-slate-200 dark:border-slate-700 pt-8">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="text-slate-700 dark:text-slate-200 font-medium flex items-center gap-2">
-                        <i class="fas fa-history text-primary"></i> AI生成历史（最近10条）
+                        <i class="fas fa-history text-primary"></i> 生成历史（最近10条）
                     </h3>
                     <button id="clear-history" class="text-sm text-secondary dark:text-slate-400 hover:text-danger dark:hover:text-danger btn-hover">
                         <i class="fas fa-trash-alt"></i> 清空历史
@@ -230,7 +219,7 @@
                 <div id="history-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
                     <div id="empty-history" class="text-center py-8 text-slate-400 dark:text-slate-500">
                         <i class="fas fa-inbox text-2xl mb-2"></i>
-                        <p>暂无AI生成记录，点击「启动AI模型生成」开始吧～</p>
+                        <p>暂无生成记录，点击「一键生成」开始吧～</p>
                     </div>
                 </div>
             </div>
@@ -239,32 +228,26 @@
 
     <!-- 底部 -->
     <footer class="bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-300 py-4 px-6 text-center text-sm border-t dark:border-slate-800">
-        <p>AI提示词智能生成器 | 本地AI优化 + 真实API对接 | 纯前端无数据上传</p>
-        <p class="mt-1 text-slate-400 dark:text-slate-500">© 2026 马年专属 · 智能提示词工具</p>
+        <p>AI提示词极速生成器 | 本地毫秒级优化 + 真实API对接 | 纯前端无数据上传</p>
+        <p class="mt-1 text-slate-400 dark:text-slate-500">© 2026 马年专属 · 极速提示词工具</p>
     </footer>
 
-    <!-- 🔄 AI模型加载弹窗（核心：模拟模型运转） -->
-    <div id="loading-modal" class="loading-overlay hidden">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-8 w-full max-w-md shadow-2xl">
-            <div class="flex flex-col items-center justify-center gap-6">
-                <!-- 加载动画 -->
-                <div class="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                <h3 class="text-xl font-bold text-slate-800 dark:text-white">AI模型正在运转</h3>
-                <p class="text-center text-slate-600 dark:text-slate-400" id="loading-text">
-                    正在解析需求 → 优化提示词 → 生成精准结果<br>
-                    请稍候，模型处理中...
+    <!-- 🔄 加载弹窗（仅API异步调用时显示） -->
+    <div id="loading-modal" class="loading-overlay">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-sm shadow-2xl">
+            <div class="flex flex-col items-center justify-center gap-4">
+                <div class="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">AI模型处理中</h3>
+                <p class="text-center text-slate-600 dark:text-slate-400 text-sm">
+                    正在调用真实AI模型，请稍候...
                 </p>
-                <!-- 加载进度条 -->
-                <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div id="loading-progress" class="h-full bg-primary w-0 transition-all duration-2000"></div>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript核心逻辑 -->
+    <!-- JavaScript核心逻辑（重点修复） -->
     <script>
-        // ========== 全局变量 & 元素获取 ==========
+        // ========== 元素获取 ==========
         const elems = {
             userNeed: document.getElementById('user-need'),
             generateBtn: document.getElementById('generate-btn'),
@@ -286,14 +269,13 @@
             suggestionCard: document.getElementById('suggestion-card'),
             suggestionContent: document.getElementById('suggestion-content'),
             loadingModal: document.getElementById('loading-modal'),
-            loadingText: document.getElementById('loading-text'),
-            loadingProgress: document.getElementById('loading-progress'),
             historyList: document.getElementById('history-list'),
             emptyHistory: document.getElementById('empty-history'),
             clearHistory: document.getElementById('clear-history')
         };
 
-        const HISTORY_KEY = 'aiPromptHistoryV2';
+        // 存储key
+        const HISTORY_KEY = 'aiPromptHistory_Fast';
         const THEME_KEY = 'aiPromptTheme';
         const MODEL_MODE_KEY = 'aiModelMode';
 
@@ -303,16 +285,16 @@
             initModelMode();
             renderHistory();
             elems.userNeed.focus();
+            // 初始隐藏加载弹窗（关键：防止页面加载时误触发）
+            elems.loadingModal.classList.add('hidden');
         });
 
-        // ========== 1. 模型模式切换（本地/API） ==========
+        // ========== 1. 模型模式切换（仅控制UI显示，不影响加载逻辑） ==========
         function initModelMode() {
-            // 读取本地存储的模型模式
             const savedMode = localStorage.getItem(MODEL_MODE_KEY) || 'local';
             elems.modelMode.value = savedMode;
             toggleApiConfig(savedMode);
 
-            // 切换事件
             elems.modelMode.addEventListener('change', (e) => {
                 const mode = e.target.value;
                 localStorage.setItem(MODEL_MODE_KEY, mode);
@@ -320,7 +302,6 @@
             });
         }
 
-        // 显示/隐藏API配置区
         function toggleApiConfig(mode) {
             elems.apiConfig.classList.toggle('hidden', mode !== 'api');
         }
@@ -337,89 +318,155 @@
 
         elems.themeToggle.addEventListener('click', () => {
             const isDark = document.documentElement.classList.contains('dark');
-            if (isDark) {
-                document.documentElement.classList.remove('dark');
-                document.documentElement.classList.add('light');
-                localStorage.setItem(THEME_KEY, 'light');
-            } else {
-                document.documentElement.classList.remove('light');
-                document.documentElement.classList.add('dark');
-                localStorage.setItem(THEME_KEY, 'dark');
-            }
+            document.documentElement.classList.toggle('dark', !isDark);
+            localStorage.setItem(THEME_KEY, isDark ? 'light' : 'dark');
         });
 
-        // ========== 3. 核心：AI模型核心逻辑 ==========
+        // ========== 3. 核心：本地极速AI模型（毫秒级执行，无延迟） ==========
         /**
-         * 本地AI模型：模拟真实大模型，优化提示词+生成评分+建议
-         * @param {string} need - 用户原始需求
-         * @param {string} modelType - 模型类型（general/painting/writing/coding）
+         * 本地极速AI模型：同步执行，无异步等待，核心能力保留
+         * @param {string} need - 用户需求
+         * @param {string} modelType - 模型类型
          * @param {string} count - 字数限制
          * @param {string} style - 风格要求
-         * @returns {Object} { optimizedPrompt: 优化后提示词, score: 评分, suggestions: 建议数组 }
+         * @returns {Object} { optimizedPrompt, score, suggestions }
          */
         function localAIModel(need, modelType, count, style) {
-            // 基础配置
+            // 基础配置（极简处理，提升速度）
             const styleText = style.trim() ? `，风格：${style.trim()}` : '';
-            const countText = count !== 'unlimited' ? `，字数控制在${count}字以内` : '';
-            const baseConfig = `${styleText}${countText}，逻辑清晰、细节丰富、适配对应AI模型`;
+            const countText = count !== 'unlimited' ? `，字数≤${count}` : '';
 
-            // 1. 生成模型专属基础提示词
+            // 1. 模型专属基础提示词（核心逻辑保留，代码简化）
             let basePrompt = '';
             switch (modelType) {
                 case 'painting':
-                    basePrompt = `【绘画专属提示词】需求：${need}。要求：画面感强，包含分辨率（8K/4K）、色彩、构图、光影，适配Midjourney/Stable Diffusion，${baseConfig}。`;
+                    basePrompt = `【绘画提示词】需求：${need}。要求：8K超高清、黄金比例构图、精准光影氛围${styleText}${countText}，适配MJ/SD生成。`;
                     break;
                 case 'writing':
-                    basePrompt = `【文案专属提示词】需求：${need}。要求：贴合场景、语气适配受众、有感染力，适配小红书/公众号/电商，${baseConfig}。`;
+                    basePrompt = `【文案提示词】需求：${need}。要求：贴合场景、语气适配受众、有感染力${styleText}${countText}，适配小红书/公众号。`;
                     break;
                 case 'coding':
-                    basePrompt = `【编程专属提示词】需求：${need}。要求：明确语言/框架、步骤化功能、符合开发规范，适配Copilot/CodeLlama，${baseConfig}。`;
+                    basePrompt = `【编程提示词】需求：${need}。要求：明确语言/框架、可直接运行、注释清晰${styleText}${countText}，适配Copilot。`;
                     break;
                 default:
-                    basePrompt = `【通用提示词】需求：${need}。要求：精准匹配需求、原创有价值、适配通用大模型，${baseConfig}。`;
+                    basePrompt = `【通用提示词】需求：${need}。要求：精准匹配需求、细节丰富${styleText}${countText}，适配通用大模型。`;
             }
 
-            // 2. 智能优化：补充缺失维度、强化精准性
-            const optimizedPrompt = smartOptimizePrompt(basePrompt, modelType);
+            // 2. 极速优化：仅补充核心缺失维度（无冗余逻辑）
+            const optimizedPrompt = smartFastOptimize(basePrompt, modelType);
 
-            // 3. 质量评分（0-100）：精准度、完整性、适配性、可读性
-            const score = calculatePromptScore(need, optimizedPrompt, modelType);
+            // 3. 极速评分（4维度简化算法，毫秒级计算）
+            const score = fastCalculateScore(need, optimizedPrompt, modelType, count);
 
-            // 4. 生成优化建议
-            const suggestions = generateSuggestions(need, optimizedPrompt, score, modelType);
+            // 4. 极简建议（3条核心建议，快速生成）
+            const suggestions = fastGenerateSuggestions(score, modelType, count, optimizedPrompt.length);
 
             return { optimizedPrompt, score, suggestions };
         }
 
-        /**
-         * 真实AI模型API调用（以通义千问为例，可替换为任意大模型）
-         */
-        async function apiAIModel(need, modelType, count, style) {
-            if (!elems.apiKey.value.trim()) {
-                throw new Error('请输入有效的API Key！');
+        // 极速优化函数
+        function smartFastOptimize(prompt, modelType) {
+            // 绘画模型：必补分辨率/构图
+            if (modelType === 'painting') {
+                if (!prompt.includes('8K') && !prompt.includes('4K')) prompt += ' 8K超高清，细节拉满；';
+                if (!prompt.includes('构图')) prompt += ' 黄金比例构图，主体突出；';
+            }
+            // 文案模型：必补受众/场景
+            else if (modelType === 'writing') {
+                if (!prompt.includes('受众')) prompt += ' 受众：年轻人/职场人，语气亲切；';
+                if (!prompt.includes('场景')) prompt += ' 场景：朋友圈/小红书，适配传播；';
+            }
+            // 编程模型：必补语言/框架
+            else if (modelType === 'coding') {
+                if (!prompt.includes('语言')) prompt += ' 语言：Python/JS，适配主流版本；';
+                if (!prompt.includes('框架')) prompt += ' 无额外依赖，可直接运行；';
+            }
+            // 去重、精简
+            return prompt.replace(/，+/g, '，').trim() + (prompt.endsWith('。') ? '' : '。');
+        }
+
+        // 极速评分函数（简化版，保留核心维度）
+        function fastCalculateScore(need, prompt, modelType, count) {
+            let score = 65; // 基础分65，提升初始评分
+            const needLen = need.length;
+            const promptLen = prompt.length;
+
+            // 1. 精准度（+15分）
+            const keyWords = need.split(/\s+|[，。！？]/).filter(Boolean);
+            const matchRate = keyWords.filter(word => prompt.includes(word)).length / keyWords.length;
+            score += Math.min(15, matchRate * 15);
+
+            // 2. 模型适配性（+15分）
+            let modelScore = 0;
+            if (modelType === 'painting') modelScore = prompt.includes('8K') && prompt.includes('构图') ? 15 : 8;
+            else if (modelType === 'writing') modelScore = prompt.includes('受众') && prompt.includes('场景') ? 15 : 8;
+            else if (modelType === 'coding') modelScore = prompt.includes('语言') && prompt.includes('框架') ? 15 : 8;
+            else modelScore = prompt.includes('适配') ? 15 : 8;
+            score += modelScore;
+
+            // 3. 字数合理性（+10分）
+            if (count === 'unlimited') {
+                score += promptLen > 80 && promptLen < 250 ? 10 : 5;
+            } else {
+                const limit = Number(count);
+                score += promptLen <= limit && promptLen >= limit * 0.4 ? 10 : 5;
             }
 
-            // 构建API请求参数（适配通义千问qwen-max模型）
-            const requestData = {
-                model: "qwen-max",
-                input: {
-                    messages: [
-                        {
-                            role: "system",
-                            content: `你是专业的AI提示词优化专家，擅长根据不同模型类型（绘画/文案/编程/通用）生成精准、高质量的提示词。要求：1. 补充需求缺失的关键维度；2. 适配对应模型的生成规则；3. 控制字数；4. 语言精准无冗余。`
-                        },
-                        {
-                            role: "user",
-                            content: `用户需求：${need}\n模型类型：${modelType}\n字数要求：${elems.wordCount.value}\n风格要求：${elems.promptStyle.value || '无'}\n请生成优化后的提示词，并附带评分（0-100）和3条具体优化建议。`
-                        }
-                    ]
-                },
-                parameters: {
-                    result_format: "message"
-                }
-            };
+            // 4. 完整性（+10分）
+            score += prompt.includes('要求：') ? 10 : 5;
+
+            return Math.min(100, Math.max(0, score));
+        }
+
+        // 极速建议函数（极简，3条核心建议）
+        function fastGenerateSuggestions(score, modelType, count, promptLen) {
+            const suggestions = [];
+            // 基础评分建议
+            if (score >= 90) suggestions.push('✅ 提示词质量优秀，可直接使用！');
+            else if (score >= 75) suggestions.push('💡 提示词质量良好，补充细节可更精准');
+            else suggestions.push('⚠️ 建议补充需求核心细节，提升适配度');
+
+            // 模型专属建议
+            if (modelType === 'painting') suggestions.push('🎨 补充「光影类型」可提升画面氛围感');
+            else if (modelType === 'writing') suggestions.push('✍️ 明确「发布平台」可优化文案语气');
+            else if (modelType === 'coding') suggestions.push('💻 指定「版本号」可提升代码兼容性');
+
+            // 字数建议
+            const limit = elems.wordCount.value;
+            if (limit !== 'unlimited') {
+                const num = Number(limit);
+                if (promptLen > num) suggestions.push(`📏 精简内容，控制在${num}字以内`);
+                else if (promptLen < num * 0.5) suggestions.push(`📏 补充细节，达到${num}字合理范围`);
+            }
+
+            return suggestions.slice(0, 3);
+        }
+
+        // ========== 4. 真实API模型调用（保留，加载仅在此处触发） ==========
+        async function apiAIModel(need, modelType, count, style) {
+            if (!elems.apiKey.value.trim()) throw new Error('请输入有效的API Key！');
+
+            // 显示加载弹窗（仅此处触发加载）
+            elems.loadingModal.classList.remove('hidden');
 
             try {
+                const requestData = {
+                    model: "qwen-max",
+                    input: {
+                        messages: [
+                            {
+                                role: "system",
+                                content: `你是专业提示词优化专家，按模型类型生成精准提示词，输出格式：优化后提示词|评分|建议1|建议2|建议3`
+                            },
+                            {
+                                role: "user",
+                                content: `需求：${need}\n模型：${modelType}\n字数：${count}\n风格：${style || '无'}。按指定格式输出。`
+                            }
+                        ]
+                    },
+                    parameters: { result_format: "message" }
+                };
+
                 const response = await fetch(elems.apiUrl.value, {
                     method: 'POST',
                     headers: {
@@ -432,194 +479,35 @@
                 const res = await response.json();
                 if (res.code) throw new Error(res.message);
 
-                // 解析API返回结果（需根据实际API格式调整）
-                const aiResult = res.output.choices[0].message.content;
-                // 解析评分、建议、优化提示词（简单正则提取，可根据API返回格式优化）
-                const scoreMatch = aiResult.match(/评分：(\d{1,3})/);
-                const score = scoreMatch ? Number(scoreMatch[1]) : 70;
-                const suggestions = aiResult.split('优化建议：')[1]?.split('\n').filter(Boolean) || ['请参考本地模型建议'];
-                const optimizedPrompt = aiResult.split('优化后提示词：')[1]?.split('评分：')[0]?.trim() || aiResult;
+                const result = res.output.choices[0].message.content.split('|');
+                const optimizedPrompt = result[0] || '';
+                const score = Number(result[1]) || 75;
+                const suggestions = result.slice(2, 5).filter(Boolean);
 
+                // 隐藏加载弹窗
+                elems.loadingModal.classList.add('hidden');
                 return { optimizedPrompt, score, suggestions };
             } catch (err) {
-                throw new Error(`API调用失败：${err.message}\n🔧 请检查API Key/地址，或切换至「本地智能优化」模式`);
+                // 失败自动降级到本地模型
+                elems.loadingModal.classList.add('hidden');
+                alert(`API调用失败：${err.message}\n已自动切换至本地极速模型`);
+                return localAIModel(need, modelType, count, style);
             }
         }
 
-        // ========== 4. 提示词智能优化核心函数 ==========
-        function smartOptimizePrompt(prompt, modelType) {
-            let optimized = prompt;
-
-            // 绘画模型：补充通用缺失维度
-            if (modelType === 'painting') {
-                if (!optimized.includes('分辨率') && !optimized.includes('8K') && !optimized.includes('4K')) {
-                    optimized += ' 分辨率：8K超高清，细节拉满；';
-                }
-                if (!optimized.includes('构图') && !optimized.includes('黄金比例')) {
-                    optimized += ' 构图：黄金比例，主体突出；';
-                }
-                if (!optimized.includes('光影') && !optimized.includes('光线')) {
-                    optimized += ' 光影：自然柔光/霓虹光影，氛围感拉满；';
-                }
-            }
-
-            // 文案模型：补充受众/场景维度
-            if (modelType === 'writing') {
-                if (!optimized.includes('受众') && !optimized.includes('读者')) {
-                    optimized += ' 受众：大众/年轻人/职场人，语气亲切自然；';
-                }
-                if (!optimized.includes('场景') && !optimized.includes('使用场景')) {
-                    optimized += ' 使用场景：朋友圈/公众号/小红书/电商详情页；';
-                }
-            }
-
-            // 编程模型：补充语言/框架维度
-            if (modelType === 'coding') {
-                if (!optimized.includes('语言') && !optimized.includes('Python') && !optimized.includes('JavaScript')) {
-                    optimized += ' 开发语言：Python/JavaScript，适配主流版本；';
-                }
-                if (!optimized.includes('框架') && !optimized.includes('依赖')) {
-                    optimized += ' 框架/依赖：无额外依赖，可直接运行；';
-                }
-            }
-
-            // 通用优化：去重、强化逻辑、补充结尾
-            optimized = optimized.replace(/，+/g, '，').trim();
-            if (!optimized.endsWith('。')) optimized += '。';
-
-            return optimized;
-        }
-
-        // ========== 5. 提示词质量评分 ==========
-        function calculatePromptScore(need, optimizedPrompt, modelType) {
-            let score = 60; // 基础分60
-            const needLen = need.length;
-            const promptLen = optimizedPrompt.length;
-
-            // 1. 精准度：需求匹配度（+20分）
-            const keyWords = need.split(/\s+|[，。！？]/).filter(Boolean);
-            const matchCount = keyWords.filter(word => optimizedPrompt.includes(word)).length;
-            score += Math.min(20, (matchCount / keyWords.length) * 20);
-
-            // 2. 完整性：补充维度（+20分）
-            let completeScore = 0;
-            switch (modelType) {
-                case 'painting':
-                    completeScore = optimizedPrompt.includes('分辨率') && optimizedPrompt.includes('构图') && optimizedPrompt.includes('光影') ? 20 : 10;
-                    break;
-                case 'writing':
-                    completeScore = optimizedPrompt.includes('受众') && optimizedPrompt.includes('场景') ? 20 : 10;
-                    break;
-                case 'coding':
-                    completeScore = optimizedPrompt.includes('语言') && optimizedPrompt.includes('框架') ? 20 : 10;
-                    break;
-                default:
-                    completeScore = optimizedPrompt.includes('适配') && optimizedPrompt.includes('细节') ? 20 : 10;
-            }
-            score += completeScore;
-
-            // 3. 适配性：模型类型匹配（+20分）
-            score += modelType === 'general' ? 15 : 20;
-
-            // 4. 可读性：字数合理（+20分）
-            const count = elems.wordCount.value;
-            if (count === 'unlimited') {
-                score += promptLen > 50 && promptLen < 300 ? 20 : 10;
-            } else {
-                const limitNum = Number(count);
-                score += promptLen <= limitNum && promptLen >= limitNum * 0.5 ? 20 : 10;
-            }
-
-            // 5. 原创性：无冗余重复（+20分）
-            const uniqueRatio = new Set(optimizedPrompt.split('，')).size / optimizedPrompt.split('，').length;
-            score += uniqueRatio > 0.8 ? 20 : uniqueRatio > 0.5 ? 10 : 0;
-
-            return Math.min(100, Math.max(0, Math.round(score)));
-        }
-
-        // ========== 6. 生成优化建议 ==========
-        function generateSuggestions(need, optimizedPrompt, score, modelType) {
-            const suggestions = [];
-            const needLen = need.length;
-            const promptLen = optimizedPrompt.length;
-
-            // 基础建议
-            if (score < 60) {
-                suggestions.push('⚠️ 提示词质量较低，建议补充需求的**核心细节**，明确使用场景和风格要求。');
-            } else if (score < 80) {
-                suggestions.push('💡 提示词质量良好，可进一步补充**模型专属维度**（如绘画的分辨率、文案的受众）。');
-            } else {
-                suggestions.push('✅ 提示词质量优秀，已适配模型规则，可直接使用！');
-            }
-
-            // 模型专属建议
-            switch (modelType) {
-                case 'painting':
-                    if (!optimizedPrompt.includes('8K') || !optimizedPrompt.includes('构图')) {
-                        suggestions.push('🎨 绘画模型建议：补充「分辨率（8K/4K）」「构图方式」「光影类型」，提升生成画面质量。');
-                    }
-                    break;
-                case 'writing':
-                    if (!optimizedPrompt.includes('受众') || !optimizedPrompt.includes('场景')) {
-                        suggestions.push('✍️ 文案模型建议：明确**目标受众**（如年轻人/职场人）和**使用场景**（如朋友圈/小红书），提升文案适配度。');
-                    }
-                    break;
-                case 'coding':
-                    if (!optimizedPrompt.includes('语言') || !optimizedPrompt.includes('框架')) {
-                        suggestions.push('💻 编程模型建议：指定**开发语言**（Python/JS）和**框架/依赖**，确保代码可直接运行。');
-                    }
-                    break;
-                default:
-                    suggestions.push('🌐 通用模型建议：需求描述越具体，AI生成结果越精准，可补充「输出格式」「核心要求」等细节。');
-            }
-
-            // 字数建议
-            const count = elems.wordCount.value;
-            if (count !== 'unlimited') {
-                const limitNum = Number(count);
-                if (promptLen > limitNum) {
-                    suggestions.push(`📏 字数建议：当前提示词${promptLen}字，超出${limit}字限制，建议精简冗余内容。`);
-                } else if (promptLen < limitNum * 0.5) {
-                    suggestions.push(`📏 字数建议：当前提示词${promptLen}字，可补充细节以达到${limit}字的合理范围。`);
-                }
-            }
-
-            // 去重建议
-            const duplicateMatch = optimizedPrompt.match(/（。，）+/g);
-            if (duplicateMatch) {
-                suggestions.push('🔄 优化建议：删除重复的表述，精简语言，提升提示词可读性。');
-            }
-
-            return suggestions.slice(0, 3); // 最多返回3条建议
-        }
-
-        // ========== 7. 加载弹窗控制 ==========
-        function showLoading() {
-            elems.loadingModal.classList.remove('hidden');
-            elems.loadingProgress.style.width = '0%';
-            // 模拟加载进度
-            setTimeout(() => elems.loadingProgress.style.width = '30%', 500);
-            setTimeout(() => elems.loadingProgress.style.width = '60%', 1200);
-            setTimeout(() => elems.loadingProgress.style.width = '100%', 1800);
-        }
-
-        function hideLoading() {
-            setTimeout(() => elems.loadingModal.classList.add('hidden'), 500);
-        }
-
-        // ========== 8. 生成按钮核心逻辑 ==========
+        // ========== 5. 生成按钮核心逻辑（关键：仅此处触发加载） ==========
         elems.generateBtn.addEventListener('click', async () => {
             const need = elems.userNeed.value.trim();
+            // 输入验证
             if (!need) {
-                alert('请输入你的核心需求后，再启动AI模型生成！');
+                alert('请输入核心需求后再生成！');
                 elems.userNeed.focus();
                 return;
             }
 
-            // 禁用按钮，防止重复点击
+            // 按钮禁用，防止重复点击
             elems.generateBtn.disabled = true;
             elems.generateBtn.classList.add('opacity-70', 'cursor-not-allowed');
-            showLoading();
 
             try {
                 const modelType = elems.aiModelType.value;
@@ -627,59 +515,66 @@
                 const style = elems.promptStyle.value;
 
                 let aiResult;
-                // 选择模型模式：本地/API
+                // 区分模型模式：本地（同步，无加载） / API（异步，有加载）
                 if (elems.modelMode.value === 'local') {
+                    // 本地模型：同步毫秒级执行，无加载弹窗
                     aiResult = localAIModel(need, modelType, count, style);
+                    // 直接展示结果，无等待
+                    renderResult(aiResult);
                 } else {
+                    // API模型：异步调用，显示加载弹窗
                     aiResult = await apiAIModel(need, modelType, count, style);
+                    // 隐藏加载后展示结果
+                    renderResult(aiResult);
                 }
 
-                // 隐藏加载弹窗，展示结果
-                hideLoading();
-                elems.generateBtn.disabled = false;
-                elems.generateBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-
-                // 填充结果
-                elems.originalPrompt.textContent = need;
-                elems.resultArea.value = aiResult.optimizedPrompt;
-                elems.resultScore.classList.remove('hidden');
-                elems.scoreValue.textContent = aiResult.score;
-                elems.suggestionCard.classList.remove('hidden');
-                elems.suggestionContent.innerHTML = '';
-                aiResult.suggestions.forEach(sug => {
-                    elems.suggestionContent.innerHTML += `<p>${sug}</p>`;
-                });
-
-                // 保存到历史记录
+                // 保存历史记录
                 saveHistory(need, aiResult.optimizedPrompt, aiResult.score, aiResult.suggestions);
-
-                // 滚动到结果区
-                elems.resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } catch (err) {
-                hideLoading();
+                alert(`生成失败：${err.message}`);
+            } finally {
+                // 恢复按钮状态
                 elems.generateBtn.disabled = false;
                 elems.generateBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-                alert(`AI模型运转失败：${err.message}`);
             }
         });
 
-        // ========== 9. 复制功能 ==========
+        // ========== 6. 结果渲染函数（统一处理结果展示） ==========
+        function renderResult({ optimizedPrompt, score, suggestions }) {
+            // 填充原始需求和优化结果
+            elems.originalPrompt.textContent = elems.userNeed.value.trim();
+            elems.resultArea.value = optimizedPrompt;
+
+            // 显示评分和建议
+            elems.resultScore.classList.remove('hidden');
+            elems.scoreValue.textContent = score;
+            elems.suggestionCard.classList.remove('hidden');
+            elems.suggestionContent.innerHTML = '';
+            suggestions.forEach(sug => {
+                elems.suggestionContent.innerHTML += `<p>${sug}</p>`;
+            });
+
+            // 滚动到结果区
+            elems.resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // ========== 7. 复制功能 ==========
         elems.copyBtn.addEventListener('click', async () => {
             const text = elems.resultArea.value.trim();
             if (!text) {
-                alert('暂无AI优化后的提示词，无法复制！');
+                alert('暂无优化后提示词，无法复制！');
                 return;
             }
             try {
                 await navigator.clipboard.writeText(text);
                 elems.copyTip.classList.remove('hidden');
-                setTimeout(() => elems.copyTip.classList.add('hidden'), 2000);
+                setTimeout(() => elems.copyTip.classList.add('hidden'), 1500);
             } catch (err) {
                 alert('复制失败，请手动复制！');
             }
         });
 
-        // ========== 10. 清空功能 ==========
+        // ========== 8. 清空功能 ==========
         elems.clearBtn.addEventListener('click', () => {
             elems.userNeed.value = '';
             elems.resultArea.value = '';
@@ -690,7 +585,7 @@
             elems.userNeed.focus();
         });
 
-        // ========== 11. 历史记录功能（升级：保存评分+建议） ==========
+        // ========== 9. 历史记录功能 ==========
         function saveHistory(need, optimizedPrompt, score, suggestions) {
             try {
                 const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
@@ -722,26 +617,21 @@
             elems.emptyHistory.remove();
             history.forEach(record => {
                 const historyItem = document.createElement('div');
+                const scoreClass = record.score >= 90 ? 'bg-success/10 text-success' : record.score >= 75 ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger';
                 historyItem.className = 'p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-700/50 card-hover';
                 historyItem.innerHTML = `
                     <div class="flex justify-between items-start mb-3">
                         <span class="text-xs text-secondary dark:text-slate-400">${record.time}</span>
-                        <span class="px-2 py-0.5 rounded-full text-xs font-medium ${record.score >= 80 ? 'bg-success/10 text-success' : record.score >= 60 ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger'}">
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium ${scoreClass}">
                             ${record.score}分
                         </span>
                     </div>
-                    <div class="text-sm text-slate-700 dark:text-slate-300 mb-2 line-clamp-1">
-                        <span class="font-medium">需求：</span>${record.need}
-                    </div>
-                    <div class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 bg-white/50 dark:bg-slate-600/30 p-2 rounded mb-2">
-                        <span class="font-medium">优化后：</span>${record.optimizedPrompt}
-                    </div>
-                    <div class="text-xs text-slate-500 dark:text-slate-500">
-                        <span class="font-medium">建议：</span>${record.suggestions[0] || '无'}
-                    </div>
+                    <div class="text-sm text-slate-700 dark:text-slate-300 mb-2 line-clamp-1">需求：${record.need}</div>
+                    <div class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 bg-white/50 dark:bg-slate-600/30 p-2 rounded mb-2">优化后：${record.optimizedPrompt}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-500">建议：${record.suggestions[0] || '无'}</div>
                     <div class="flex gap-2 mt-2">
                         <button class="history-copy text-xs px-2 py-1 bg-primary/10 text-primary rounded hover:bg-primary/20" data-id="${record.id}">
-                            <i class="fas fa-copy mr-1"></i>复制提示词
+                            <i class="fas fa-copy mr-1"></i>复制
                         </button>
                         <button class="history-delete text-xs px-2 py-1 bg-danger/10 text-danger rounded hover:bg-danger/20" data-id="${record.id}">
                             <i class="fas fa-trash mr-1"></i>删除
@@ -750,13 +640,11 @@
                 `;
                 elems.historyList.appendChild(historyItem);
             });
-
-            // 绑定历史记录事件
             bindHistoryEvents();
         }
 
         function bindHistoryEvents() {
-            // 复制历史提示词
+            // 复制历史
             document.querySelectorAll('.history-copy').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const id = Number(e.target.closest('button').dataset.id);
@@ -765,15 +653,14 @@
                     if (record) {
                         await navigator.clipboard.writeText(record.optimizedPrompt);
                         elems.copyTip.classList.remove('hidden');
-                        setTimeout(() => elems.copyTip.classList.add('hidden'), 2000);
+                        setTimeout(() => elems.copyTip.classList.add('hidden'), 1500);
                     }
                 });
             });
-
-            // 删除单条历史
+            // 删除历史
             document.querySelectorAll('.history-delete').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    if (!confirm('确定要删除这条AI生成记录吗？')) return;
+                    if (!confirm('确定删除这条记录吗？')) return;
                     const id = Number(e.target.closest('button').dataset.id);
                     let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
                     history = history.filter(item => item.id !== id);
@@ -783,14 +670,14 @@
             });
         }
 
-        // 清空所有历史
+        // 清空历史
         elems.clearHistory.addEventListener('click', () => {
-            if (!confirm('确定要清空所有AI生成历史吗？此操作不可恢复！')) return;
+            if (!confirm('确定清空所有历史吗？此操作不可恢复！')) return;
             localStorage.removeItem(HISTORY_KEY);
             renderHistory();
         });
 
-        // ========== 12. 快捷操作：Ctrl+Enter生成 ==========
+        // ========== 10. 快捷生成：Ctrl+Enter ==========
         elems.userNeed.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'Enter') {
                 elems.generateBtn.click();
